@@ -135,6 +135,7 @@ const ShopContextProvider = (props) => {
       getUserCart(localStorage.getItem("token"));
     }
   }, []);
+  
 
   const value = {
     products,
@@ -146,6 +147,7 @@ const ShopContextProvider = (props) => {
     setShowSearch,
     cartItems,
     addToCart,
+    setCartItems,
     getCartCount,
     updateQuantity,
     getCartAmount,
