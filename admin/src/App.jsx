@@ -12,7 +12,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useEffect } from "react";
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL;
-export const currency = '$'
+export const currency = 'Rs.'
 
 const App = () => {
   const [token, setToken] = useState(localStorage.getItem('token')?localStorage.getItem('token'):"");

@@ -5,8 +5,9 @@ import userModel from "../models/userModel.js"
 // placing orders using COD method
 const placeOrder = async (req, res)=>{
     try {
-        const {userId, items, amount, address} = req.body;
+        const {userId, items, amount, address,order_id} = req.body;
         const orderData = {
+           order_id,
             userId,
             items,
             amount,
@@ -28,10 +29,6 @@ const placeOrder = async (req, res)=>{
     }
 }
 
-// placing orders using stripe method
-const placeOrderStripe = async (req, res)=>{
-    
-}
 
 // all Orders data for admin panel
 const allOrders = async (req, res)=>{
@@ -67,5 +64,36 @@ const updateStatus = async (req, res)=>{
         res.json({success:false, message:error.message})
     }
 }
+// Cancel a specific item from an order
+const cancelOrderItem = async (req, res) => {
+    try {
+      const { orderId, itemId } = req.body;
+  
+      // Find the order
+      const order = await orderModel.findById(orderId);
+      if (!order) {
+        return res.json({ success: false, message: "Order not found" });
+      }
+  
+      // Filter out the item
+      const updatedItems = order.items.filter(item => item._id.toString() !== itemId);
+  
+      // If all items are removed, you could also optionally delete the order (optional)
+      if (updatedItems.length === 0) {
+        await orderModel.findByIdAndDelete(orderId);
+        return res.json({ success: true, message: "Order cancelled completely" });
+      }
+  
+      // Update the order with remaining items
+      order.items = updatedItems;
+      await order.save();
+  
+      res.json({ success: true, message: "Item cancelled successfully" });
+    } catch (error) {
+      console.log(error);
+      res.json({ success: false, message: error.message });
+    }
+  };
+  
 
-export {placeOrder, placeOrderStripe, allOrders, userOrders, updateStatus}
+export {placeOrder, allOrders, userOrders, updateStatus, cancelOrderItem}

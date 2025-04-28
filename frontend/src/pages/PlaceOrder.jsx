@@ -5,10 +5,12 @@ import { assets } from '../assets/assets'
 import { ShopContext } from '../context/ShopContext'
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import { v4 as uuidv4 } from "uuid";
 
 const PlaceOrder = () => {
-
   const [method, setMethod] = useState('cod');
+  const orderId = uuidv4();
+  
   const {navigate, backendUrl, token, cartItems, setCartItems, getCartAmount, delivery_fee, products} = useContext(ShopContext);
   const [formData, setFormData] = useState({
     firstName:'',
@@ -20,127 +22,123 @@ const PlaceOrder = () => {
     zipcode:'',
     country:'',
     phone:'',
-  })
-  const onChangeHandler =(event)=>{
-    const name = event.target.name;
-    const value = event.target.value;
+  });
 
-    setFormData(data=>({...data,[name]:value}))
+  const [isLoading, setIsLoading] = useState(false);
 
-  }
-  const onSubmitHandler = async (event)=>{
-    event.preventDefault()
+  const onChangeHandler = (event) => {
+    const { name, value } = event.target;
+    setFormData(data => ({ ...data, [name]: value }));
+  };
+
+  const onSubmitHandler = async (event) => {
+    event.preventDefault();
+    setIsLoading(true);
+
     try {
-      
-      let orderItems = []
+      let orderItems = [];
 
-      for(const items in cartItems){
-        for(const item in cartItems[items]){
-          if(cartItems[items][item]>0){
-            const itemInfo = structuredClone(products.find(product => product._id === items))
-            if(itemInfo){
-              itemInfo.size = item
-              itemInfo.quantity = cartItems[items][item]
-              orderItems.push(itemInfo)
+      for (const items in cartItems) {
+        for (const item in cartItems[items]) {
+          if (cartItems[items][item] > 0) {
+            const itemInfo = structuredClone(products.find(product => product._id === items));
+            if (itemInfo) {
+              itemInfo.size = item;
+              itemInfo.quantity = cartItems[items][item];
+              orderItems.push(itemInfo);
             }
           }
         }
       }
 
       let orderData = {
+        order_id: orderId,
         address: formData,
-        items:orderItems,
-        amount:getCartAmount() + delivery_fee
-      }
+        items: orderItems,
+        amount: getCartAmount() + delivery_fee
+      };
 
-      switch(method){
-        // Api calls for COD
-        case  'cod':
-          let response = await axios.post(backendUrl+'/api/order/place', orderData, {headers:{token}})
-          if(response.data.success){
-            setCartItems({})
-            navigate('/orders')
-            console.log(token);
-            
-          }else{
-            toast.error(response.data.message)
-          }
-          break;  
-        case  'esewa':
-          const response1 = await axios.post(backendUrl+'/api/order/esewa', orderData, {headers:{token}})
-          if(response1.data.success){
-            setCartItems({})
-            navigate('/orders')
-            console.log(token);
-            
-          }else{
-            toast.error(response1.data.message)
-          }
-          break;  
-        
-        default:
-          break;
+      if (method === 'cod') {
+        const response = await axios.post(backendUrl + '/api/order/place', orderData, { headers: { token } });
+        if (response.data.success) {
+          toast.success("Order placed successfully!", { position: "top-right" });
+          setCartItems({});
+          navigate('/orders');
+        } else {
+          toast.error(response.data.message, { position: "top-right" });
+        }
+      } 
+      else if (method === 'esewa') {
+        const response = await axios.post(backendUrl + '/api/esewa/payment-initiate', orderData, { headers: { token } });
+        if (response.status === 200) {
+          toast.success("Redirecting to eSewa payment...", { position: "top-right" });
+          window.location.href = response.data.url; // redirect to eSewa
+        } else {
+          toast.error("Error initiating eSewa payment.", { position: "top-right" });
+        }
       }
 
     } catch (error) {
       console.log(error);
-      toast.error(error.message)
-      
+      toast.error(error.message, { position: "top-right" });
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <form onSubmit={onSubmitHandler} className='flex flex-col sm:flex-row justify-between gap-4 pt-5 sm:pt-14 min-h-[80vh] border-t'>
-      {/* ----------left side--------------- */}
+      {/* Left side */}
       <div className='flex flex-col gap-4 w-full sm:max-w-[480px]'>
         <div className='text-xl sm:text-2xl my-3'>
-          <Title text1={'DELIVERY'} text2={'INFORMATION'}/>
+          <Title text1={'DELIVERY'} text2={'INFORMATION'} />
         </div>
         <div className='flex gap-3'>
-          <input required onChange={onChangeHandler} name='firstName' value={formData.firstName} type="text" placeholder='First name' className='border border-gray-300 rounded py-1.5 px-3.5 w-full'/>
-          <input required onChange={onChangeHandler} name='lastName' value={formData.lastName} type="text" placeholder='Last name' className='border border-gray-300 rounded py-1.5 px-3.5 w-full'/>
+          <input required onChange={onChangeHandler} name='firstName' value={formData.firstName} type="text" placeholder='First name' className='border border-gray-300 rounded py-1.5 px-3.5 w-full' />
+          <input required onChange={onChangeHandler} name='lastName' value={formData.lastName} type="text" placeholder='Last name' className='border border-gray-300 rounded py-1.5 px-3.5 w-full' />
         </div>
-        <input required onChange={onChangeHandler} name='email' value={formData.email} type="email" placeholder='Email address' className='border border-gray-300 rounded py-1.5 px-3.5 w-full'/>
-        <input required onChange={onChangeHandler} name='street' value={formData.street} type="text" placeholder='Street' className='border border-gray-300 rounded py-1.5 px-3.5 w-full'/>
+        <input required onChange={onChangeHandler} name='email' value={formData.email} type="email" placeholder='Email address' className='border border-gray-300 rounded py-1.5 px-3.5 w-full' />
+        <input required onChange={onChangeHandler} name='street' value={formData.street} type="text" placeholder='location' className='border border-gray-300 rounded py-1.5 px-3.5 w-full' />
         <div className='flex gap-3'>
-          <input required onChange={onChangeHandler} name='city' value={formData.city} type="text" placeholder='City' className='border border-gray-300 rounded py-1.5 px-3.5 w-full'/>
-          <input required onChange={onChangeHandler} name='state' value={formData.state} type="text" placeholder='State' className='border border-gray-300 rounded py-1.5 px-3.5 w-full'/>
+          <input required onChange={onChangeHandler} name='city' value={formData.city} type="text" placeholder='City' className='border border-gray-300 rounded py-1.5 px-3.5 w-full' />
+          <input required onChange={onChangeHandler} name='state' value={formData.state} type="text" placeholder='State' className='border border-gray-300 rounded py-1.5 px-3.5 w-full' />
         </div>
         <div className='flex gap-3'>
-          <input required onChange={onChangeHandler} name='zipcode' value={formData.zipcode} type="number" placeholder='Zipcode' className='border border-gray-300 rounded py-1.5 px-3.5 w-full'/>
-          <input required onChange={onChangeHandler} name='country' value={formData.country} type="text" placeholder='Country' className='border border-gray-300 rounded py-1.5 px-3.5 w-full'/>
+          {/* <input required onChange={onChangeHandler} name='zipcode' value={formData.zipcode} type="number" placeholder='Zipcode' className='border border-gray-300 rounded py-1.5 px-3.5 w-full' /> */}
+          {/* <input required onChange={onChangeHandler} name='country' value={formData.country} type="text" placeholder='Country' className='border border-gray-300 rounded py-1.5 px-3.5 w-full' /> */}
         </div>
-        <input required onChange={onChangeHandler} name='phone' value={formData.phone} type="number" placeholder='Phone' className='border border-gray-300 rounded py-1.5 px-3.5 w-full'/>
+        <input required onChange={onChangeHandler} name='phone' value={formData.phone} type="text" placeholder='Phone' className='border border-gray-300 rounded py-1.5 px-3.5 w-full' />
       </div>
 
-      {/* ----------------Right side----------- */}
+      {/* Right side */}
       <div className='mt-8'>
         <div className='mt-8 min-w-80'>
-          <CartTotal/>
+          <CartTotal />
         </div>
 
         <div className='mt-12'>
-          <Title text1={'PAYMENT'} text2={'METHOD'}/>
-          {/* ----Payment method selection------ */}
+          <Title text1={'PAYMENT'} text2={'METHOD'} />
+          {/* Payment method selection */}
           <div className='flex gap-3 flex-col lg:flex-row'>
-            
-            <div onClick={()=>setMethod('esewa')} className='flex items-center gap-3 border p-2 px-3 cursor-pointer'>
+            <div onClick={() => setMethod('esewa')} className='flex items-center gap-3 border p-2 px-3 cursor-pointer'>
               <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'esewa' ? 'bg-green-400' : ''}`}></p>
               <img className='h-5 mx-4' src={assets.esewaLogo} alt="esewa_logo" />
             </div>
-            <div onClick={()=>setMethod('cod')} className='flex items-center gap-3 border p-2 px-3 cursor-pointer'>
+            <div onClick={() => setMethod('cod')} className='flex items-center gap-3 border p-2 px-3 cursor-pointer'>
               <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'cod' ? 'bg-green-400' : ''}`}></p>
               <p className='text-gray-500 text-sm font-medium mx-4'>CASH ON DELIVERY</p>
             </div>
           </div>
-          
+
           <div className='w-full text-end mt-8'>
-            <button type='submit' className='bg-black text-white px-16 py-3 text-sm'>PLACE ORDER</button>
+            <button type='submit' className='bg-black text-white px-16 py-3 text-sm' disabled={isLoading}>
+              {isLoading ? "Processing..." : "PLACE ORDER"}
+            </button>
           </div>
         </div>
       </div>
     </form>
-  )
-}
+  );
+};
 
-export default PlaceOrder
+export default PlaceOrder;

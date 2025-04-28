@@ -80,8 +80,6 @@ const Orders = ({ token }) => {
                     ", " +
                     order.address.state +
                     ", " +
-                    order.address.country +
-                    ", " +
                     order.address.zipcode}
                 </p>
               </div>
