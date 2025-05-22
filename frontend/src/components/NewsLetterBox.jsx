@@ -50,7 +50,7 @@ const NewsLetterBox = () => {
         <button
           type="submit"
           disabled={submitting}
-          className="bg-black text-white text-xs px-6 py-3 hover:bg-gray-900 disabled:opacity-60"
+          className="bg-black text-white text-xs px-6 py-4 hover:bg-gray-900 disabled:opacity-60"
         >
           {submitting ? 'Submitting...' : 'SUBSCRIBE'}
         </button>
