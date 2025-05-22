@@ -6,18 +6,16 @@ import { assets } from "../assets/assets";
 
 const Orders = ({ token }) => {
   const [orders, setOrders] = useState([]);
+
   const fetchAllOrders = async () => {
-    if (!token) {
-      return null;
-    }
+    if (!token) return;
+
     try {
-      
       const response = await axios.post(
-        backendUrl + "/api/order/list",
+        `${backendUrl}/api/order/list`,
         {},
         { headers: { token } }
       );
-
       if (response.data.success) {
         setOrders(response.data.orders);
       } else {
@@ -30,78 +28,135 @@ const Orders = ({ token }) => {
 
   const statusHandler = async (event, orderId) => {
     try {
-      
-      const response = await axios.post(backendUrl+'/api/order/status', {orderId, status:event.target.value}, {headers:{token}})
-      console.log(response.data);
-      console.log("hahaha");
-      
-      if(response.data.success){
-        await fetchAllOrders()
+      const response = await axios.post(
+        `${backendUrl}/api/order/status`,
+        { orderId, status: event.target.value },
+        { headers: { token } }
+      );
+      if (response.data.success) {
+        toast.success("Order status updated");
+        fetchAllOrders();
       }
     } catch (error) {
-      console.log(error);
-      toast.error(response.data.message)
+      toast.error("Failed to update order status");
     }
-  }
+  };
+
+  // New: Remove order handler
+  const removeOrderHandler = async (orderId) => {
+    if (!window.confirm("Are you sure you want to remove this order?")) return;
+
+    try {
+      const response = await axios.post(
+        `${backendUrl}/api/order/delete`,
+        { orderId },
+        { headers: { token } }
+      );
+      if (response.data.success) {
+        toast.success("Order removed successfully");
+        // Remove order from state
+        setOrders((prevOrders) => prevOrders.filter((order) => order._id !== orderId));
+      } else {
+        toast.error(response.data.message || "Failed to remove order");
+      }
+    } catch (error) {
+      toast.error(error.message || "Failed to remove order");
+    }
+  };
 
   useEffect(() => {
     fetchAllOrders();
   }, [token]);
+
   return (
-    <div>
-      <h3>Order Page</h3>
-      <div>
-        {orders.map((order, index) => (
-          <div className="grid grid-cols-1 sm:grid-cols-[0.5fr_2fr_1fr] lg:grid-cols-[0.5fr_2fr_1fr_1fr_1fr] gap-3 items-start border-2 border-gray-200 p-5 md:p-8 my-3 md:my-4 text-xs sm:text-sm text-gray-700 " key={index}>
-            <img className="w-12" src={assets.parcel_icon} alt="" />
-            <div>
-              <div>
-                {order.items.map((item, index) => {
-                  if (index === order.items.length - 1) {
-                    return (
-                      <p className="py-0.5" key={index}>
-                        {item.name} x {item.quantity} <span>{item.size}</span>
-                      </p>
-                    );
-                  } else {
-                    return (
-                      <p className="py-0.5" key={index}>
-                        {item.name} x {item.quantity} <span>{item.size}</span> ,
-                      </p>
-                    );
-                  }
-                })}
+    <div className="px-4 py-6 max-w-7xl mx-auto">
+      <h2 className="text-xl font-semibold mb-6">Orders Management</h2>
+
+      {orders.length === 0 ? (
+        <div className="text-gray-500 italic text-center py-10">
+          No orders have been placed yet.
+        </div>
+      ) : (
+        orders.map((order, index) => (
+          <div
+            key={index}
+            className="bg-white border border-gray-200 rounded-xl p-5 mb-6 shadow-sm hover:shadow-md transition"
+          >
+            <div className="flex flex-col sm:flex-row justify-between gap-6">
+              {/* Order Icon and Summary */}
+              <div className="flex items-start gap-4">
+                <img src={assets.parcel_icon} alt="Parcel" className="w-12 h-12" />
+                <div>
+                  <h4 className="font-medium text-gray-800 mb-1">
+                    Order #{order._id.slice(-6).toUpperCase()}
+                  </h4>
+                  <p className="text-sm text-gray-500">
+                    Placed on: {new Date(order.date).toLocaleDateString()}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Status: <span className="font-medium">{order.status}</span>
+                  </p>
+                </div>
               </div>
-              <p className="mt-3 mb-2 font-medium">{order.address.firstName + " " + order.address.lastName}</p>
-              <div>
-                <p>{order.address.street + ","}</p>
-                <p>
-                  {order.address.city +
-                    ", " +
-                    order.address.state +
-                    ", " +
-                    order.address.zipcode}
+
+              {/* Order Items */}
+              <div className="flex-1">
+                <h5 className="font-semibold text-gray-700 mb-2">Items</h5>
+                <ul className="text-sm text-gray-600 list-disc pl-5">
+                  {order.items.map((item, idx) => (
+                    <li key={idx}>
+                      {item.name} x {item.quantity} {item.size && `(${item.size})`}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Address Info */}
+              <div className="text-sm text-gray-700">
+                <h5 className="font-semibold mb-2">Shipping Address</h5>
+                <p>{order.address.firstName} {order.address.lastName}</p>
+                <p>{order.address.street}</p>
+                <p>{order.address.city}, {order.address.state} {order.address.zipcode}</p>
+                <p>📞 {order.address.phone}</p>
+              </div>
+
+              {/* Payment and Action */}
+              <div className="text-sm text-gray-700 space-y-2">
+                <p><span className="font-semibold">Total:</span> {currency}{order.amount}</p>
+                <p><span className="font-semibold">Method:</span> {order.paymentMethod}</p>
+                <p><span className="font-semibold">Payment:</span> 
+                  <span className={`ml-1 font-semibold ${order.payment ? "text-green-600" : "text-red-500"}`}>
+                    {order.payment ? "Done" : "Pending"}
+                  </span>
                 </p>
+
+                <div>
+                  <label className="block font-semibold mb-1">Update Status</label>
+                  <select
+                    value={order.status}
+                    onChange={(e) => statusHandler(e, order._id)}
+                    className="w-full border rounded-lg p-2 text-sm"
+                  >
+                    <option value="Order Placed">Order Placed</option>
+                    <option value="Packing">Packing</option>
+                    <option value="Shipped">Shipped</option>
+                    <option value="Out for delivery">Out for delivery</option>
+                    <option value="Delivered">Delivered</option>
+                  </select>
+                </div>
+
+                {/* Remove button */}
+                <button
+                  onClick={() => removeOrderHandler(order._id)}
+                  className="mt-3 w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded"
+                >
+                  Remove Order
+                </button>
               </div>
-              <p>{order.address.phone}</p>
             </div>
-            <div>
-              <p className="text-sm sm:text-[15px]">Items : {order.items.length}</p>
-              <p className="mt-3">Method : {order.paymentMethod}</p>
-              <p>Payment : {order.payment ? "Done" : "Pending"}</p>
-              <p>Date : {new Date(order.date).toLocaleDateString()}</p>
-            </div>
-            <p className="text-sm sm:text-[15px]">{currency} {order.amount}</p>
-            <select onChange={(event)=>statusHandler(event, order._id)} value={order.status} className="p-2 font-semibold">
-              <option value="Order Placed">Order Placed</option>
-              <option value="Packing">Packing</option>
-              <option value="Shipped">Shipped</option>
-              <option value="Out for delivery">Out for delivery</option>
-              <option value="  Delivered">  Delivered</option>
-            </select>
           </div>
-        ))}
-      </div>
+        ))
+      )}
     </div>
   );
 };

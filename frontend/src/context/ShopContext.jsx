@@ -50,6 +50,18 @@ const ShopContextProvider = (props) => {
       }
     }
   };
+  const clearCart = async () => {
+  setCartItems({});
+  try {
+    if (token) {
+      await axios.post(backendUrl + "/api/cart/clear", {}, { headers: { token } });
+    }
+  } catch (error) {
+    console.log(error);
+    toast.error("Failed to clear cart on server");
+  }
+};
+
   const getCartCount = () => {
     let totalCount = 0;
     for (const items in cartItems) {
@@ -155,6 +167,7 @@ const ShopContextProvider = (props) => {
     backendUrl,
     token,
     setToken,
+    clearCart,
   };
 
   return (

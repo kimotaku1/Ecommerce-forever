@@ -54,5 +54,23 @@ const getUserCart = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+const clearCart = async (req, res) => {
+  try {
+    const { userId } = req.body;
 
-export { addToCart, updateCart, getUserCart };
+    const userData = await userModel.findById(userId);
+    if (!userData) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    userData.cartData = {}; // Clear cart data
+    await userData.save();
+
+    res.json({ success: true, message: "Cart cleared successfully" });
+  } catch (error) {
+    console.error(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+export { addToCart, updateCart, getUserCart, clearCart};

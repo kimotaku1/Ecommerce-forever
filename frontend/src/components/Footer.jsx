@@ -8,9 +8,7 @@ const Footer = () => {
         <div>
           <img src={assets.logo} className="mb-5 w-32" alt="" />
           <p className="w-full md:w-2/3 text-gray-600">
-            Lorem, ipsum dolor sit amet consectetur adipisicing elit. In quam
-            porro rerum quae ipsam perferendis deleniti nostrum voluptatem
-            ducimus consequatur.
+          We bring you the latest fashion at affordable prices. From everyday wear to standout pieces, our goal is to make style accessible for everyone.
           </p>
         </div>
         <div>
@@ -26,15 +24,15 @@ const Footer = () => {
         <div>
           <p className="text-xl font-medium mb-5">GET IN TOUCH</p>
           <ul className="flex flex-col gap-1 text-gray-600">
-            <li>+1-212-456-7890</li>
-            <li>contact@foreveryou.com</li>
+            <li>+977 9851037545</li>
+            <li>ezzyshopfashionwear@gmail.com</li>
           </ul>
         </div>
       </div>
 
       <div>
         <hr />
-        <p className="py-5 text-sm text-center">Copyright 2024@ forever.com - All Right Reserved.</p>
+        <p className="py-5 text-sm text-center">Copyright 2024@ ezzefashion.com - All Right Reserved.</p>
       </div>
     </div>
   );

@@ -18,7 +18,7 @@ const Orders = () => {
         let allOrdersItem = [];
         response.data.orders.forEach((order) => {
           order.items.forEach((item) => {
-            item['orderId'] = order._id; // Save order id for canceling
+            item['orderId'] = order._id;
             item['status'] = order.status;
             item['payment'] = order.payment;
             item['paymentMethod'] = order.paymentMethod;
@@ -37,7 +37,6 @@ const Orders = () => {
     try {
       if (!token) return;
 
-      // Call backend to cancel
       const response = await axios.post(
         backendUrl + '/api/order/cancelitem', 
         { orderId, itemId },
@@ -45,7 +44,6 @@ const Orders = () => {
       );
 
       if (response.data.success) {
-        // Remove canceled item from orderData
         setOrderData((prevData) => prevData.filter(item => item._id !== itemId));
       } else {
         console.log("Failed to cancel item");
@@ -100,12 +98,14 @@ const Orders = () => {
               >
                 Track order
               </button>
-              <button
-                onClick={() => cancelOrderItem(item.orderId, item._id)}
-                className="border px-4 py-2 text-sm font-medium rounded-sm text-red-600 border-red-600"
-              >
-                Cancel order
-              </button>
+              {item.paymentMethod === 'COD' && (
+                <button
+                  onClick={() => cancelOrderItem(item.orderId, item._id)}
+                  className="border px-4 py-2 text-sm font-medium rounded-sm text-red-600 border-red-600"
+                >
+                  Cancel order
+                </button>
+              )}
             </div>
           </div>
         ))}

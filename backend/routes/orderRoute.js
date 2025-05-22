@@ -1,5 +1,5 @@
 import express from "express"
-import {placeOrder, allOrders, userOrders, updateStatus, cancelOrderItem} from '../controllers/orderController.js'
+import {placeOrder, allOrders, userOrders, updateStatus, cancelOrderItem, deleteOrder} from '../controllers/orderController.js'
 import adminAuth from '../middleware/adminAuth.js'
 import authUser from "../middleware/auth.js"
 const orderRouter = express.Router()
@@ -14,6 +14,8 @@ orderRouter.post('/cancelitem', authUser, cancelOrderItem);
 
 // User features
 orderRouter.post('/userorders', authUser, userOrders)
+
+orderRouter.post('/delete', authUser, deleteOrder);
 
 export default orderRouter
 

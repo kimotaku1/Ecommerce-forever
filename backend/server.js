@@ -8,6 +8,7 @@ import productRouter from "./routes/productRoute.js";
 import cartRouter from "./routes/cartRoute.js";
 import orderRouter from "./routes/orderRoute.js";
 import { esewaRouter } from "./routes/esewaRoute.js";
+import newsletterRoute from "./routes/newsLetter.js";
 
 // App Config
 const app = express()
@@ -27,6 +28,7 @@ app.use('/api/order', orderRouter)
 
 app.use('/api/esewa',esewaRouter)
 
+app.use("/api/newsletter", newsletterRoute);
 
 app.get('/', (req, res)=>{
     res.send("API Working");
