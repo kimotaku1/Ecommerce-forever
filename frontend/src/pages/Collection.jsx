@@ -5,12 +5,12 @@ import Title from "../components/Title";
 import ProductItem from "../components/ProductItem";
 
 const Collection = () => {
-  const { products, search, showSearch} = useContext(ShopContext);
+  const { products, search, showSearch } = useContext(ShopContext);
   const [showFilter, setShowFilter] = useState(false);
   const [filterProducts, setFilterproducts] = useState([]);
   const [category, setCategory] = useState([]);
   const [subCategory, setSubCategory] = useState([]);
-  const [sortType, setSortType] = useState('relavent');
+  const [sortType, setSortType] = useState("relevant");
 
   const toggleCategory = (e) => {
     if (category.includes(e.target.value)) {
@@ -28,49 +28,52 @@ const Collection = () => {
     }
   };
 
-  const applyFilter = () => {
-    let productsCopy = products.slice();
+  useEffect(() => {
+    let filtered = products.slice();
 
-    if(showSearch && search){
-      productsCopy = productsCopy.filter(item=>item.name.toLowerCase().includes(search.toLowerCase()))
+    // Enhanced search: split into terms, match in multiple fields
+    if (showSearch && search) {
+      const searchTerms = search.toLowerCase().trim().split(/\s+/);
+
+      filtered = filtered.filter((item) => {
+        const searchableString = [
+          item.name,
+          item.category,
+          item.subCategory,
+          item.description || "",
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        return searchTerms.every((term) => searchableString.includes(term));
+      });
     }
 
+    // Category filter
     if (category.length > 0) {
-      productsCopy = productsCopy.filter((item) =>
-        category.includes(item.category)
-      );
+      filtered = filtered.filter((item) => category.includes(item.category));
     }
+
+    // SubCategory filter
     if (subCategory.length > 0) {
-      productsCopy = productsCopy.filter((item) =>
-        subCategory.includes(item.subCategory)
-      );
+      filtered = filtered.filter((item) => subCategory.includes(item.subCategory));
     }
 
-    setFilterproducts(productsCopy);
-  };
-
-  const sortProduct = () => {
-    let fpCopy = filterProducts.slice();
+    // Sorting
     switch (sortType) {
       case "low-high":
-        setFilterproducts(fpCopy.sort((a, b) => a.price-b.price));
+        filtered.sort((a, b) => a.price - b.price);
         break;
       case "high-low":
-        setFilterproducts(fpCopy.sort((a, b) => b.price-a.price));
+        filtered.sort((a, b) => b.price - a.price);
         break;
       default:
-        applyFilter();
+        // 'relevant' or any other - no sort or default sorting by name or id (optional)
         break;
     }
-  };
 
-  useEffect(() => {
-    applyFilter();
-  }, [category, subCategory, search, showSearch, products]);
-
-  useEffect(()=>{
-    sortProduct();
-  }, [sortType])
+    setFilterproducts(filtered);
+  }, [products, search, showSearch, category, subCategory, sortType]);
 
   return (
     <div className="flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t">
@@ -78,13 +81,15 @@ const Collection = () => {
       <div className="min-w-60">
         <p
           onClick={() => setShowFilter(!showFilter)}
-          className="my-2 text-xl flex items-center cursor-pointer gap-2"
+          className="my-2 text-xl flex items-center cursor-pointer gap-2 select-none"
         >
           FILTERS
           <img
-            className={`h-3 sm:hidden ${showFilter ? "rotate-90" : ""}`}
+            className={`h-3 sm:hidden transition-transform duration-300 ${
+              showFilter ? "rotate-90" : ""
+            }`}
             src={assets.dropdown_icon}
-            alt=""
+            alt="dropdown icon"
           />
         </p>
         {/* Category Filter */}
@@ -95,33 +100,36 @@ const Collection = () => {
         >
           <p className="mb-3 text-sm font-medium">CATEGORY</p>
           <div className="flex flex-col gap-2 text-sm font-light text-gray-700">
-            <p className="flex gap-2">
+            <label className="flex gap-2 cursor-pointer">
               <input
                 className="w-3"
                 type="checkbox"
                 value={"Men"}
+                checked={category.includes("Men")}
                 onChange={toggleCategory}
               />
               Men
-            </p>
-            <p className="flex gap-2">
+            </label>
+            <label className="flex gap-2 cursor-pointer">
               <input
                 className="w-3"
                 type="checkbox"
                 value={"Women"}
+                checked={category.includes("Women")}
                 onChange={toggleCategory}
               />
               Women
-            </p>
-            <p className="flex gap-2">
+            </label>
+            <label className="flex gap-2 cursor-pointer">
               <input
                 className="w-3"
                 type="checkbox"
                 value={"Kids"}
+                checked={category.includes("Kids")}
                 onChange={toggleCategory}
               />
               Kids
-            </p>
+            </label>
           </div>
         </div>
         {/* SubCategory Filter */}
@@ -132,33 +140,36 @@ const Collection = () => {
         >
           <p className="mb-3 text-sm font-medium">TYPE</p>
           <div className="flex flex-col gap-2 text-sm font-light text-gray-700">
-            <p className="flex gap-2">
+            <label className="flex gap-2 cursor-pointer">
               <input
                 className="w-3"
                 type="checkbox"
                 value={"Topwear"}
+                checked={subCategory.includes("Topwear")}
                 onChange={toggleSubCategory}
               />
               Topwear
-            </p>
-            <p className="flex gap-2">
+            </label>
+            <label className="flex gap-2 cursor-pointer">
               <input
                 className="w-3"
                 type="checkbox"
                 value={"Bottomwear"}
+                checked={subCategory.includes("Bottomwear")}
                 onChange={toggleSubCategory}
               />
               Bottomwear
-            </p>
-            <p className="flex gap-2">
+            </label>
+            <label className="flex gap-2 cursor-pointer">
               <input
                 className="w-3"
                 type="checkbox"
                 value={"Winterwear"}
+                checked={subCategory.includes("Winterwear")}
                 onChange={toggleSubCategory}
               />
               Winterwear
-            </p>
+            </label>
           </div>
         </div>
       </div>
@@ -167,8 +178,12 @@ const Collection = () => {
         <div className="flex justify-between text-base sm:text-2xl mb-4">
           <Title text1={"ALL"} text2={"COLLECTIONS"} />
           {/* Product Sort */}
-          <select onChange={(e)=>setSortType(e.target.value)} className="border-2 border-gray-300 text-sm px-2">
-            <option value="relavant">Sort by: Relavant</option>
+          <select
+            onChange={(e) => setSortType(e.target.value)}
+            value={sortType}
+            className="border-2 border-gray-300 text-sm px-2"
+          >
+            <option value="relevant">Sort by: Relevant</option>
             <option value="low-high">Sort by: Low to High</option>
             <option value="high-low">Sort by: High to Low</option>
           </select>
@@ -177,7 +192,7 @@ const Collection = () => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6">
           {filterProducts.map((item, index) => (
             <ProductItem
-              key={index}
+              key={item._id || index}
               id={item._id}
               name={item.name}
               image={item.image}
