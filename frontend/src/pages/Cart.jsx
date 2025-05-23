@@ -3,11 +3,21 @@ import { ShopContext } from "../context/ShopContext";
 import Title from "../components/Title";
 import { assets } from "../assets/assets";
 import CartTotal from "../components/CartTotal";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const Cart = () => {
-  const { products, currency, cartItems, updateQuantity, navigate } =
-    useContext(ShopContext);
+  const {
+    products,
+    currency,
+    cartItems,
+    updateQuantity,
+    navigate: contextNavigate,
+    token,
+  } = useContext(ShopContext);
+
   const [cartData, setCartData] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (products.length > 0) {
@@ -26,6 +36,15 @@ const Cart = () => {
       setCartData(tempData);
     }
   }, [cartItems, products]);
+
+  const handleCheckout = () => {
+    if (!token) {
+      toast.info("Please login to continue to checkout");
+      navigate("/login", { state: { from: "/place-order" } });
+    } else {
+      navigate("/place-order");
+    }
+  };
 
   return (
     <div className="border-t pt-14">
@@ -94,7 +113,7 @@ const Cart = () => {
           <CartTotal />
           <div className="w-full text-end">
             <button
-              onClick={() => navigate("/place-order")}
+              onClick={handleCheckout}
               className="bg-black text-white text-sm my-8 px-8 py-3"
             >
               PROCEED TO CHECKOUT
