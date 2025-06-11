@@ -42,7 +42,6 @@ const Orders = ({ token }) => {
     }
   };
 
-  // New: Remove order handler
   const removeOrderHandler = async (orderId) => {
     if (!window.confirm("Are you sure you want to remove this order?")) return;
 
@@ -54,7 +53,6 @@ const Orders = ({ token }) => {
       );
       if (response.data.success) {
         toast.success("Order removed successfully");
-        // Remove order from state
         setOrders((prevOrders) => prevOrders.filter((order) => order._id !== orderId));
       } else {
         toast.error(response.data.message || "Failed to remove order");
@@ -77,7 +75,7 @@ const Orders = ({ token }) => {
           No orders have been placed yet.
         </div>
       ) : (
-        orders.map((order, index) => (
+        orders.slice().reverse().map((order, index) => (
           <div
             key={index}
             className="bg-white border border-gray-200 rounded-xl p-5 mb-6 shadow-sm hover:shadow-md transition"
