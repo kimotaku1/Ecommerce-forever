@@ -1,12 +1,15 @@
 import React from "react";
 import { assets } from "../assets/assets";
+import { Link, NavLink } from "react-router-dom";
 
 const Footer = () => {
   return (
     <div>
       <div className="flex flex-col sm:grid grid-cols-[3fr_1fr_1fr] gap-14 my-10 mt-40 text-sm">
         <div>
+          <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
           <img src={assets.logo} className="mb-5 w-32" alt="" />
+          </Link>
           <p className="w-full md:w-2/3 text-gray-600">
           We bring you the latest fashion at affordable prices. From everyday wear to standout pieces, our goal is to make style accessible for everyone.
           </p>
