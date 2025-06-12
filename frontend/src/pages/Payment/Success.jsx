@@ -23,7 +23,7 @@ const Success = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:4000/api/esewa/payment-status",
+        "https://ecommerce-forever-pzei.onrender.com/api/esewa/payment-status",
         { order_id: decoded.transaction_uuid }
       );
 
